@@ -17,7 +17,7 @@ var customGetUsage = function(cb) {
   var utime = parseInt(elems[13]);
   var stime = parseInt(elems[14]);
 
-  cb(undefined,utime + stime);
+  cb(undefined, utime + stime, Date.now());
 };
 
 exports.afterEach = function(done) {
@@ -56,17 +56,25 @@ exports.cpu_should_not_send_twice_to_same_series = function(finish) {
 
 exports.cpu_should_calculate_percentage_usage = function(finish) {
   var first = true;
+  var mockUsage = [[0, 0], [6, 1000], [0, 0], [6, 2000]];
   function getUsage(cb) {
-    if (first) {
-      first = false;
-      return cb(null, 0);
-    }
-    return cb(null, 60);
+    var usage = mockUsage.shift();
+    return cb(null, usage[0], usage[1]);
   }
 
+  // the interval doens't matter here as we're mocking the read time above
   metrics.cpu(component, {interval: 10, period: 5,"getUsage": getUsage}, function(err, data) {
-    assert.ok(!err);
-    assert.equal(data.fields.cpuUsed, 0.6);
-    finish();
+    assert.ok(!err, err);
+    // 6% usage over 1 second
+    assert.equal(data.fields.cpuUsed, 0.06);
+    metrics.cpu(component, {stop: true}, function(err) {
+      assert.ok(!err, err);
+      metrics.cpu(component, {interval: 10, period: 5,"getUsage": getUsage}, function(err, data) {
+        assert.ok(!err, err);
+        // 3% usage over 2 seconds
+        assert.equal(data.fields.cpuUsed, 0.03);
+        return finish();
+      });
+    })
   });
 };
