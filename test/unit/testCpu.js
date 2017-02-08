@@ -9,6 +9,7 @@ var mocks = {
 };
 
 var metrics = proxyquire('index.js', mocks)({enabled: true});
+var component = 'testComponent';
 
 var customGetUsage = function(cb) {
   var data = "2987 (inet_gethost) S 2986 2986 2986 0 -1 4202560 170 0 0 0 0 0 0 0 20 0 1 0 4250 9691136 168 18446744073709551615 1 1 0 0 0 0 0 69760 0 18446744073709551615 0 0 17 0 0 0 0 0 0";
@@ -19,10 +20,14 @@ var customGetUsage = function(cb) {
   cb(undefined,utime + stime);
 };
 
+exports.afterEach = function(done) {
+  metrics.cpu(component, {stop: true}, done);
+};
+
 exports.cpu_should_send_valid_object = function(finish) {
   var called = false;
 
-  metrics.cpu('testComponent', {interval: 10, period: 5,"getUsage": customGetUsage}, function(err, data) {
+  metrics.cpu(component, {interval: 10, period: 5,"getUsage": customGetUsage}, function(err, data) {
     assert.ok(!err);
     assert.ok(data.hasOwnProperty('key'));
     assert.equal(data.key, 'testComponent_cpu');
@@ -40,8 +45,28 @@ exports.cpu_should_send_valid_object = function(finish) {
 };
 
 exports.cpu_should_not_send_twice_to_same_series = function(finish) {
-  metrics.cpu('testComponent', {interval: 10, period: 5, getUsage:customGetUsage}, function(err) {
-    assert.ok(err);
+  metrics.cpu(component, {interval: 10, period: 5,"getUsage": customGetUsage}, function(err, data) {
+    assert.ok(!err, err);
+    metrics.cpu(component, {interval: 10, period: 5, getUsage:customGetUsage}, function(err) {
+      assert.ok(err);
+      finish();
+    });
+  });
+};
+
+exports.cpu_should_calculate_percentage_usage = function(finish) {
+  var first = true;
+  function getUsage(cb) {
+    if (first) {
+      first = false;
+      return cb(null, 0);
+    }
+    return cb(null, 60);
+  }
+
+  metrics.cpu(component, {interval: 10, period: 5,"getUsage": getUsage}, function(err, data) {
+    assert.ok(!err);
+    assert.equal(data.fields.cpuUsed, 0.6);
     finish();
   });
 };
