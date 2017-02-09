@@ -1,6 +1,7 @@
 var assert = require('assert');
 var proxyquire = require('proxyquire');
 var os = require('os');
+var sinon = require('sinon');
 
 var mocks = {
   './lib/sender': function() {
@@ -55,24 +56,24 @@ exports.cpu_should_not_send_twice_to_same_series = function(finish) {
 };
 
 exports.cpu_should_calculate_percentage_usage = function(finish) {
-  var first = true;
-  var mockUsage = [[0, 0], [6, 1000], [0, 0], [6, 2000]];
-  function getUsage(cb) {
-    var usage = mockUsage.shift();
-    return cb(null, usage[0], usage[1]);
-  }
+  var usageStub = sinon.stub();
+  // 6% usage over 1 second
+  usageStub.onCall(0).callsArgWithAsync(0, null, 0, 0);
+  usageStub.onCall(1).callsArgWithAsync(0, null, 6, 1000);
 
   // the interval doens't matter here as we're mocking the read time above
-  metrics.cpu(component, {interval: 10, period: 5,"getUsage": getUsage}, function(err, data) {
+  metrics.cpu(component, {interval: 10, period: 5,"getUsage": usageStub}, function(err, data) {
     assert.ok(!err, err);
-    // 6% usage over 1 second
-    assert.equal(data.fields.cpuUsed, 0.06);
+    assert.equal(data.fields.cpuUsed, 0.06); // 6%
+
+    // 3% usage over 2 seconds
+    usageStub.onCall(2).callsArgWithAsync(0, null, 0, 0);
+    usageStub.onCall(3).callsArgWithAsync(0, null, 6, 2000);
     metrics.cpu(component, {stop: true}, function(err) {
       assert.ok(!err, err);
-      metrics.cpu(component, {interval: 10, period: 5,"getUsage": getUsage}, function(err, data) {
+      metrics.cpu(component, {interval: 10, period: 5,"getUsage": usageStub}, function(err, data) {
         assert.ok(!err, err);
-        // 3% usage over 2 seconds
-        assert.equal(data.fields.cpuUsed, 0.03);
+        assert.equal(data.fields.cpuUsed, 0.03); // 3%
         return finish();
       });
     })
