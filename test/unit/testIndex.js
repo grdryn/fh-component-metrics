@@ -59,7 +59,7 @@ function reset () {
 }
 
 exports.test_metricsEnabled = function(done) {
-  var m = metrics({enabled: true});
+  var m = metrics({enabled: true, host: 'localhost'});
   checkMetric(m, true);
   done();
 };

@@ -24,7 +24,7 @@ exports.testTimingMiddlewareURL = function(finish) {
         assert.equal(tag.route, mockReq.url);
       };
     },
-    './sender': function() {
+    './clients': function() {
 
     }
   });
@@ -49,7 +49,7 @@ exports.testTimingMiddlewareRoute = function(finish) {
         assert.equal(tag.route, mockReq.url);
       };
     },
-    './sender': function() {
+    './clients': function() {
 
     }
   });
@@ -77,7 +77,7 @@ exports.testTimingMiddlewareRouteNonString = function(finish) {
         assert.fail("should not be called");
       };
     },
-    './sender': function() {
+    './clients': function() {
 
     }
   });

@@ -3,12 +3,12 @@ var proxyquire = require('proxyquire');
 var os = require('os');
 
 var mocks = {
-  './lib/sender': function() {
+  './lib/clients': function() {
     this.send = function() {};
   }
 };
 
-var metrics = proxyquire('index.js', mocks)({enabled: true});
+var metrics = proxyquire('index.js', mocks)({enabled: true, host: '127.0.0.1'});
 
 exports.mem_should_send_valid_object = function(finish) {
 

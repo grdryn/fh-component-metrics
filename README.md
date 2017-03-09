@@ -38,7 +38,18 @@ Here are the steps to use this module in an existing RHMAP component:
     });
     ```
 
-3. To capture API time, you can add the timingMiddleware to an existing express app like this:
+3. Send metrics data to multiple backends. By default, if you only need to send metrics data to an Influxdb backend, you can specify the configuration as the example above. But it also supports some other backends like Statsd and it can send the metrics data to multiple backends at the same time. To do that, you just need to change the configuration and replace the `host` and `port` value with an array called `backends`:
+
+   ```
+   var fhComponentMetrics = require('fh-component-metrics');
+   var metricsConf = {enabled: true, backends:[{type: 'influxdb', host: '1.2.3.4', port: 2003}, {type: 'statsd', host: '1.2.3.4', port: 2004}];
+   var metrics = fhComponentMetrics(metricsConf);
+   //the metrics data will be sent to both the influxdb and statsd backend
+   ```
+
+At the moment, it only supports Influxdb and Statsd, so the only options for the `type` field are `influxdb` and `statsd`.
+
+4. To capture API time, you can add the timingMiddleware to an existing express app like this:
 
     ```
     var fhComponentMetrics = require('fh-component-metrics');
@@ -47,7 +58,7 @@ Here are the steps to use this module in an existing RHMAP component:
     app.use(fhComponentMetrics.timingMiddleware('myExpressApp', metricsConf));
     ```
 
-4. It's better the add the metrics configuration into the component's configuation file. E.g.
+5. It's better the add the metrics configuration into the component's configuation file. E.g.
 
     ```
     {

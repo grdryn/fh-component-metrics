@@ -4,12 +4,12 @@ var os = require('os');
 var sinon = require('sinon');
 
 var mocks = {
-  './lib/sender': function() {
+  './lib/clients': function() {
     this.send = function() {};
   }
 };
 
-var metrics = proxyquire('index.js', mocks)({enabled: true});
+var metrics = proxyquire('index.js', mocks)({enabled: true, host: '127.0.0.1'});
 var component = 'testComponent';
 
 var customGetUsage = function(cb) {
