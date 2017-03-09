@@ -17,7 +17,6 @@ var statsdClient = proxyquire('lib/clients/statsd.js', {
 
 exports.test_buildMessages = function(done) {
   var client = statsdClient.init({});
-  var ts = new Date().getTime();
   var data = {
     type: types.G,
     key: 'testKey',
